@@ -1,5 +1,10 @@
 const ClothingItem = require("../models/clothingItem");
-const { BAD_REQUEST, NOT_FOUND, DEFAULT_ERROR } = require("../utils/errors");
+const {
+  BAD_REQUEST,
+  NOT_FOUND,
+  DEFAULT_ERROR,
+  FORBIDDEN,
+} = require("../utils/errors");
 
 const getItems = (req, res) => {
   ClothingItem.find({})
@@ -30,9 +35,21 @@ const createItem = (req, res) => {
 };
 
 const deleteItem = (req, res) => {
-  ClothingItem.findByIdAndDelete(req.params.itemId)
+  const { itemId } = req.params;
+  const userId = req.user._id;
+
+  ClothingItem.findById(itemId)
     .orFail()
-    .then((item) => res.send({ message: "Item successfully deleted", item }))
+    .then((item) => {
+      if (item.owner.toString() !== userId) {
+        return res
+          .status(FORBIDDEN)
+          .send({ message: "You do not have permission to delete this item" });
+      }
+      return item
+        .deleteOne()
+        .then(() => res.send({ message: "Item successfully deleted" }));
+    })
     .catch((err) => {
       console.error(err);
       if (err.name === "DocumentNotFoundError") {
