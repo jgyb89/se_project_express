@@ -82,6 +82,7 @@ const createUser = (req, res) => {
           delete result.password;
           res.status(201).send(result);
         })
+
         .catch((err) => {
           console.error(err);
           if (err.name === "ValidationError") {
