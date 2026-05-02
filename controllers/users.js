@@ -65,36 +65,24 @@ const createUser = (req, res) => {
 
   return bcrypt
     .hash(password, 10)
-    .then((hashedPassword) => {
-      User.create({
-        name,
-        avatar,
-        email,
-        password: hashedPassword,
-      })
-        .then((user) => {
-          const result = user.toObject();
-          delete result.password;
-          res.status(201).send(result);
-        })
-
-        .catch((err) => {
-          console.error(err);
-          if (err.name === "ValidationError") {
-            return res.status(BAD_REQUEST).send({ message: err.message });
-          }
-          if (err.code === 11000) {
-            return res
-              .status(CONFLICT)
-              .send({ message: "A user with this email already exists" });
-          }
-          return res
-            .status(DEFAULT_ERROR)
-            .send({ message: "An error has occurred on the server" });
-        });
+    .then((hashedPassword) =>
+      User.create({ name, avatar, email, password: hashedPassword })
+    )
+    .then((user) => {
+      const result = user.toObject();
+      delete result.password;
+      res.status(201).send(result);
     })
     .catch((err) => {
       console.error(err);
+      if (err.name === "ValidationError") {
+        return res.status(BAD_REQUEST).send({ message: err.message });
+      }
+      if (err.code === 11000) {
+        return res
+          .status(CONFLICT)
+          .send({ message: "A user with this email already exists" });
+      }
       return res
         .status(DEFAULT_ERROR)
         .send({ message: "An error has occurred on the server" });
